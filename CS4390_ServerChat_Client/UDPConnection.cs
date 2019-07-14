@@ -8,67 +8,69 @@ namespace CS4390_ServerChat_Client
     public class UDPConnection
     {
         string clientID;
-	    public UDPConnection(string clientID)
+        IPEndPoint serverAddress;
+        Socket udpConnectionSocket;
+	    public UDPConnection(string clientID, string serverIP)
 	    {
             this.clientID = clientID;
+            serverAddress = new IPEndPoint(IPAddress.Parse(serverIP), 10020);
+            udpConnectionSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            udpConnectionSocket.Connect(serverAddress);
         }
 
 
-        public IPEndPoint UDPConnect(string hostIP)
+        public IPEndPoint UDPConnect()
         {
-            IPAddress serverAddress = IPAddress.Parse(hostIP);
-            IPEndPoint hostEndPoint = new IPEndPoint(serverAddress, 10020);
-
-            Socket udpConnectionSetup = UDPSend(hostEndPoint);
-            int tcpPort = UDPReceive(udpConnectionSetup);
+            //while(clientID=="noahb")
+            { 
+                UDPSend(clientID); // HELLO
+                //Console.WriteLine("Sent another Hello!");
+            }
+            int tcpPort = UDPReceive();
             if(tcpPort<5)
             {
                 return null;
             }
-            IPEndPoint tcpHostEndPoint = new IPEndPoint(serverAddress, tcpPort);
+            IPEndPoint tcpHostEndPoint = new IPEndPoint(serverAddress.Address, tcpPort);
             return tcpHostEndPoint;
         }
 
-        //Call this function with string "IP:PORT" for example "192.168.1.1:10401"
-        //Function returns response from server after sending "HELLO"
-        public Socket UDPSend(IPEndPoint serverEndPoint)
+        //Call this function with string you wish to send to the server (Client ID, challenge response, etc.
+        
+        public void UDPSend(String sendText)
         {
-            Socket sock = null;
-
             try
             {
-                
-                sock = new Socket(SocketType.Dgram, ProtocolType.Udp);
-                //SocketType.Dgram (UDP) /Stream (TCP)
-                //ProtocolType.UDP/TCP
 
 
-                //Send "HELLO" to server using UDP.
-                string hello = clientID; //Sends "Hello" (Client-ID)
-                byte[] buffer = Encoding.ASCII.GetBytes(hello);
-                sock.SendTo(buffer, serverEndPoint);
+                //Send message to server using UDP.
+                byte[] buffer = Encoding.ASCII.GetBytes(sendText);
+                //udpConnectionSocket.SendToAsync( //(buffer, SocketFlags.None);
+                udpConnectionSocket.SendTo(buffer, buffer.Length, SocketFlags.None, serverAddress);
+                udpConnectionSocket.SendTo(buffer, serverAddress);
 
             }
             catch (SocketException e) { }
             catch (ArgumentNullException e) { }
             catch (Exception e) { }
-            return sock;
         }
 
-        public int UDPReceive(Socket sock)
+        public int UDPReceive()
         {
             string receiveString = "";
 
             //Receive response from server using same socket.
-            byte[] receiveBytes = null;
+            byte[] receiveBytes = new byte[1024];
             try
             {
-                Int32 receive = sock.Receive(receiveBytes);
+                EndPoint EP = (EndPoint)serverAddress;
+                Int32 receive = udpConnectionSocket.ReceiveFrom(receiveBytes, ref EP);
                 receiveString += Encoding.ASCII.GetString(receiveBytes); //(receive, 0, receiveBytes);
+                receiveString = receiveString.Substring(0, receive);
 
                 while (receive > 0)
                 {
-                    receive = sock.Receive(receiveBytes, receiveBytes.Length, 0);
+                    receive = udpConnectionSocket.ReceiveFrom(receiveBytes, receiveBytes.Length, 0, ref EP);
                     receiveString += Encoding.ASCII.GetString(receiveBytes, receiveBytes.Length, 0);
                 }
 
@@ -86,7 +88,7 @@ namespace CS4390_ServerChat_Client
             catch (Exception e) { }
 
 
-            sock.Close();  //Close socket when done.
+            udpConnectionSocket.Close();  //Close socket when done.
 
             return 0; //Return TCP port number
 
