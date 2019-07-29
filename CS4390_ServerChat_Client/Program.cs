@@ -30,6 +30,11 @@ namespace CS4390_ServerChat_Client
             {
                 response = udpConnection.UDPConnect();
             }
+            if (response.Equals("FAIL"))
+            {
+                Console.ReadKey(); //Pause if failure happened.
+                return;
+            }
             string cookie = "";
             string port = "";
             int space = 0;
@@ -38,14 +43,15 @@ namespace CS4390_ServerChat_Client
                 if (response[i] == ' ')
                 {
                     space = i;
+                    break;
                 }
-                cookie = response.Substring(0, i);
+                else
+                {
+                    cookie += response.Substring(i, 1);
+                }
             }
-            byte[] cookieNum = Encoding.ASCII.GetBytes(cookie);
             port = response.Substring(space, response.Length - space);
-            byte[] portNum = Encoding.ASCII.GetBytes(port);
             Console.WriteLine("Finished?: "+cookie+" "+port);
-            Console.WriteLine(cookieNum + " " + portNum);
             while(true)
             {
 

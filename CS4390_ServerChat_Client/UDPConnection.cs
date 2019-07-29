@@ -27,20 +27,21 @@ namespace CS4390_ServerChat_Client
         {
             UDPSend(clientID); // HELLO
             string response = UDPReceive(); //Receive challenge (random integer, challenge)
-
-            int serverChallenge = 0;
-            int.TryParse(response, out serverChallenge); //Convert challenge to integer
+            byte[] serverChallenge;
+            serverChallenge = Encoding.ASCII.GetBytes(response);
             string clientResponse = Encoding.ASCII.GetString(challengeReponse(serverChallenge)); //Get response, convert from byte[] to string
-
             UDPSend(clientID +" "+ clientResponse); //Send clientID + challenge Response
 
             string tcp = UDPReceive(); //Receive rand_cookie, port_number for TCP connection
-
+            if (tcp.Equals("FAIL"))
+            {
+                Console.WriteLine("Authentication failed.");
+            }
             udpConnectionSocket.Close();  //Close socket when done.
             return tcp;
         }
 
-        public byte[] challengeReponse(int rand)
+        public byte[] challengeReponse(byte[] rand)
         {
             SHA256 encryptionObject = SHA256.Create();
             byte[] randKey = Encoding.ASCII.GetBytes(rand.ToString() + privateKey);
@@ -71,32 +72,15 @@ namespace CS4390_ServerChat_Client
         {
             string receiveString = "";
 
-            //Receive response from server using same socket.
             byte[] receiveBytes = new byte[1024];
             try
             {
                 EndPoint EP = (EndPoint)serverAddress;
                 udpConnectionSocket.ReceiveTimeout = 1200000;
                 Int32 receive = udpConnectionSocket.ReceiveFrom(receiveBytes, ref EP);
-                receiveString += Encoding.ASCII.GetString(receiveBytes); //(receive, 0, receiveBytes);
+                receiveString += Encoding.ASCII.GetString(receiveBytes);
                 receiveString = receiveString.Substring(0, receive);
-
-                /*while (receive > 0)
-                {
-                    receive = udpConnectionSocket.ReceiveFrom(receiveBytes, receiveBytes.Length, 0, ref EP);
-                    receiveString += Encoding.ASCII.GetString(receiveBytes, receiveBytes.Length, 0);
-                }*/
                 return receiveString;
-                /*int tcpPort;
-
-                if (int.TryParse(receiveString, out tcpPort) == true)
-                {
-                    return tcpPort;
-                }
-                else
-                {
-                    Console.WriteLine("DEBUG: Received string from server: " + receiveString);
-                }*/
             }
             catch (Exception e) { }
 
