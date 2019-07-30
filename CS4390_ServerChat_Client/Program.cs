@@ -13,46 +13,28 @@ namespace CS4390_ServerChat_Client
             string clientID = Console.ReadLine();
             Console.WriteLine("\n Enter your client password.");
             string password = Console.ReadLine();
-            string serverIPPort = "";
+            string serverIP = "";
             if(args.Length==0) //If the console has not accepted any arguments, ask for the IP.
             {
                 Console.WriteLine("\n Please enter the IP address of the server. (Example: 1.1.1.1)");
-                serverIPPort = Console.ReadLine();
+                serverIP = Console.ReadLine();
             }else
             {
-                serverIPPort = args[0];
+                serverIP = args[0];
             }
-            UDPConnection udpConnection = new UDPConnection(clientID, password, serverIPPort);
-
-
-            string response = null; //When not null, contains rand_cookie and tcpPortNumber
-            while (response==null)
-            {
-                response = udpConnection.UDPConnect();
-            }
+            UDPConnection udpConnection = new UDPConnection(clientID, password, serverIP);
+            string response = udpConnection.UDPConnect();
             if (response.Equals("FAIL"))
             {
-                Console.ReadKey(); //Pause if failure happened.
-                return;
+                Console.ReadKey();
+                Main(args);
             }
-            string cookie = "";
-            string port = "";
-            int space = 0;
-            for(int i = 0; i < response.Length; i++)
-            {
-                if (response[i] == ' ')
-                {
-                    space = i;
-                    break;
-                }
-                else
-                {
-                    cookie += response.Substring(i, 1);
-                }
-            }
-            port = response.Substring(space, response.Length - space);
-            Console.WriteLine("Finished?: "+cookie+" "+port);
-            while(true)
+            int[] cookie_port = UDPConnection.udpParse(response);
+            TCPConnection tcpConnection = new TCPConnection(cookie_port[0], new IPEndPoint(IPAddress.Parse(serverIP), cookie_port[1]));
+            tcpConnection.TCPConnect();
+            //tcpConnection.send/receive();
+
+            while (true)
             {
 
             }

@@ -68,6 +68,28 @@ namespace CS4390_ServerChat_Client
             catch (Exception e) { }
         }
 
+        public static int[] udpParse(string response)
+        {
+            string cookie = "";
+            string port = "";
+            int space = 0;
+            for (int i = 0; i < response.Length; i++)
+            {
+                if (response[i] == ' ')
+                {
+                    space = i;
+                    break;
+                }
+                else
+                {
+                    cookie += response.Substring(i, 1);
+                }
+            }
+            port = response.Substring(space, response.Length - space);
+            int[] cookiePort = { Int32.Parse(cookie), Int32.Parse(port) };
+            return cookiePort;
+        }
+
         public string UDPReceive()
         {
             string receiveString = "";
