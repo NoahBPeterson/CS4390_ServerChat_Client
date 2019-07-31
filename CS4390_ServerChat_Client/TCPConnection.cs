@@ -28,12 +28,17 @@ namespace CS4390_ServerChat_Client
             ClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             ClientSocket.Connect(serverEndpoint);
             Console.Write("Client is connected\n");
+            send(cookie.ToString()); //Need to send the rand_cookie to server for TCP so it knows who we are.
+            if(receive().Equals("CONNECTED"))
+            {
+                Console.WriteLine("Handshake successful!");
+            }
             while (true)
             {
                 string messageFromClient = null;
                 Console.WriteLine("Enter the Message");
                 messageFromClient = Console.ReadLine();
-
+                Console.WriteLine(receive());
             }
         }
 
@@ -69,7 +74,7 @@ namespace CS4390_ServerChat_Client
                 }
             }
         }
-
+        
         public string Decrypt(string encryptedMessage)
         {
             using (var CryptoMD5 = new MD5CryptoServiceProvider())

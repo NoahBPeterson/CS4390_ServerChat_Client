@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace CS4390_ServerChat_Client
 {
@@ -14,7 +16,8 @@ namespace CS4390_ServerChat_Client
             Console.WriteLine("\n Enter your client password.");
             string password = Console.ReadLine();
             string serverIP = "";
-            if(args.Length==0) //If the console has not accepted any arguments, ask for the IP.
+
+            if (args.Length==0) //If the console has not accepted any arguments, ask for the IP.
             {
                 Console.WriteLine("\n Please enter the IP address of the server. (Example: 1.1.1.1)");
                 serverIP = Console.ReadLine();

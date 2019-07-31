@@ -33,7 +33,9 @@ namespace CS4390_ServerChat_Client
             string response = UDPReceive(); //Receive challenge (random integer, challenge)
             byte[] serverChallenge;
             serverChallenge = Encoding.UTF8.GetBytes(response);
-            string clientResponse = Encoding.UTF8.GetString(challengeReponse(serverChallenge)); //Get response, convert from byte[] to string
+            int randomChallenge;
+            Int32.TryParse(response, out randomChallenge);
+            string clientResponse = Encoding.UTF8.GetString(challengeReponse(randomChallenge)); //Get response, convert from byte[] to string
             UDPSend(clientID +" "+ clientResponse); //Send clientID + challenge Response
             privateKeyCipher = clientResponse;
 
@@ -46,12 +48,11 @@ namespace CS4390_ServerChat_Client
             return tcp;
         }
 
-        public byte[] challengeReponse(byte[] rand)
+        public byte[] challengeReponse(int rand)
         {
             SHA256 encryptionObject = SHA256.Create();
             byte[] randKey = Encoding.UTF8.GetBytes(rand.ToString() + privateKey);
             byte[] randHash = encryptionObject.ComputeHash(randKey); //Hashes challenge with out privateKey (password)
-            
             return randHash;
         }
 
