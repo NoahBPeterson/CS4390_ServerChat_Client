@@ -12,6 +12,10 @@ namespace CS4390_ServerChat_Client
         IPEndPoint serverAddress;
         IPEndPoint clientAddress;
         Socket udpConnectionSocket;
+
+        public string privateKeyCipher;
+
+
 	    public UDPConnection(string clientID, string clientPass, string serverIP)
 	    {
             this.clientID = clientID;
@@ -28,9 +32,10 @@ namespace CS4390_ServerChat_Client
             UDPSend(clientID); // HELLO
             string response = UDPReceive(); //Receive challenge (random integer, challenge)
             byte[] serverChallenge;
-            serverChallenge = Encoding.ASCII.GetBytes(response);
-            string clientResponse = Encoding.ASCII.GetString(challengeReponse(serverChallenge)); //Get response, convert from byte[] to string
+            serverChallenge = Encoding.UTF8.GetBytes(response);
+            string clientResponse = Encoding.UTF8.GetString(challengeReponse(serverChallenge)); //Get response, convert from byte[] to string
             UDPSend(clientID +" "+ clientResponse); //Send clientID + challenge Response
+            privateKeyCipher = clientResponse;
 
             string tcp = UDPReceive(); //Receive rand_cookie, port_number for TCP connection
             if (tcp.Equals("FAIL"))
@@ -44,7 +49,7 @@ namespace CS4390_ServerChat_Client
         public byte[] challengeReponse(byte[] rand)
         {
             SHA256 encryptionObject = SHA256.Create();
-            byte[] randKey = Encoding.ASCII.GetBytes(rand.ToString() + privateKey);
+            byte[] randKey = Encoding.UTF8.GetBytes(rand.ToString() + privateKey);
             byte[] randHash = encryptionObject.ComputeHash(randKey); //Hashes challenge with out privateKey (password)
             
             return randHash;
@@ -57,7 +62,7 @@ namespace CS4390_ServerChat_Client
             try
             {
                 //Send message to server using UDP.
-                byte[] buffer = Encoding.ASCII.GetBytes(sendText);
+                byte[] buffer = Encoding.UTF8.GetBytes(sendText);
                 EndPoint hostEndPoint = (EndPoint)serverAddress;
                 udpConnectionSocket.SendTo(buffer, buffer.Length, SocketFlags.None, hostEndPoint);
                 //udpConnectionSocket.SendTo(buffer, hostEndPoint);
@@ -100,7 +105,7 @@ namespace CS4390_ServerChat_Client
                 EndPoint EP = (EndPoint)serverAddress;
                 udpConnectionSocket.ReceiveTimeout = 1200000;
                 Int32 receive = udpConnectionSocket.ReceiveFrom(receiveBytes, ref EP);
-                receiveString += Encoding.ASCII.GetString(receiveBytes);
+                receiveString += Encoding.UTF8.GetString(receiveBytes);
                 receiveString = receiveString.Substring(0, receive);
                 return receiveString;
             }

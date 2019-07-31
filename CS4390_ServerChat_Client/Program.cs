@@ -30,7 +30,7 @@ namespace CS4390_ServerChat_Client
                 Main(args);
             }
             int[] cookie_port = UDPConnection.udpParse(response);
-            TCPConnection tcpConnection = new TCPConnection(cookie_port[0], new IPEndPoint(IPAddress.Parse(serverIP), cookie_port[1]));
+            TCPConnection tcpConnection = new TCPConnection(cookie_port[0], new IPEndPoint(IPAddress.Parse(serverIP), cookie_port[1]), udpConnection.privateKeyCipher);
             tcpConnection.TCPConnect();
             //tcpConnection.send/receive();
 
