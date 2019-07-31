@@ -33,11 +33,14 @@ namespace CS4390_ServerChat_Client
             {
                 Console.WriteLine("Handshake successful!");
             }
-            while (true)
+            bool exit = false;
+            while (!exit)
             {
                 string messageFromClient = null;
                 Console.WriteLine("Enter the Message");
                 messageFromClient = Console.ReadLine();
+                send(messageFromClient);
+                if (messageFromClient.Equals("exit")) exit = true;
                 Console.WriteLine(receive());
             }
         }
