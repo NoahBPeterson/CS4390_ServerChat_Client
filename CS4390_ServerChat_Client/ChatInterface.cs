@@ -27,7 +27,6 @@ public class ChatInterface {
             var c = Console.ReadKey(true);
             if (c.Key == ConsoleKey.Enter) {
                 result = inputBuilder.ToString();
-                buffer.Push(result);
                 OnInput(result);
                 inputBuilder.Clear();
             } else if (c.Key == ConsoleKey.Backspace) {
