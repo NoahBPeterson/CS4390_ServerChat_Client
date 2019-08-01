@@ -34,15 +34,36 @@ namespace CS4390_ServerChat_Client
             }
             int[] cookie_port = UDPConnection.udpParse(response);
             TCPConnection tcpConnection = new TCPConnection(cookie_port[0], new IPEndPoint(IPAddress.Parse(serverIP), cookie_port[1]), udpConnection.privateKeyCipher);
-            tcpConnection.TCPConnect();
-            //tcpConnection.send/receive();
-
-            while (true)
-            {
+            bool connected = tcpConnection.TCPConnect();
+            if (!connected) {
 
             }
+            Thread.Sleep(25);
 
+            ChatInterface chatInterface = new ChatInterface(Console.WindowWidth, Console.WindowHeight);
+            Console.Clear();
+            bool exit = false;
 
+            Thread listenThread = new Thread(() => {
+                while (!exit) {
+                    string message = tcpConnection.receive();
+                    chatInterface.PushMessage(string.Format("[SERVER]: {0}", message));
+                }
+            });
+
+            listenThread.Start();
+
+            while (!exit) {
+                Thread.Sleep(25);
+                chatInterface.Update();
+                string messageFromClient = null;
+                messageFromClient = Console.ReadLine();
+                tcpConnection.send(messageFromClient);
+                chatInterface.PushMessage(string.Format("{0}: {1}",clientID, messageFromClient));
+                if (messageFromClient.Equals("exit")) exit = true;
+            }
+
+            listenThread.Join();
         }
 
     }
