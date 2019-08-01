@@ -29,7 +29,7 @@ namespace CS4390_ServerChat_Client
             ClientSocket.Connect(serverEndpoint);
             Console.Write("Client is connected\n");
             send(cookie.ToString()); //Need to send the rand_cookie to server for TCP so it knows who we are.
-            if(receiveString().Equals("CONNECTED"))
+            if (Encryption.Decrypt(receive(), Cipher) == "CONNECTED")
             {
                 Console.WriteLine("Handshake successful!");
                 return true;
