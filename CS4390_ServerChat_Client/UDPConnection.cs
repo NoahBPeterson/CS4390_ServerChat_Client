@@ -157,7 +157,7 @@ namespace CS4390_ServerChat_Client
                     //here the decrytion occurs as we create an instance to begin decrypting
                     using (var crypt = TripleDES.CreateDecryptor())
                     {
-                        //here the magic happens as we decrypt what was sent and allow us to get the original message
+                        //here the magic happens as we decrypt  what was sent and allow us to get the original message
                         byte[] cipherBytes = Convert.FromBase64String(encryptedMessage);
                         byte[] totalBytes = crypt.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
                         return UTF8Encoding.UTF8.GetString(totalBytes);

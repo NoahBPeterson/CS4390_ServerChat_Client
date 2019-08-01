@@ -34,6 +34,8 @@ namespace CS4390_ServerChat_Client
                 Console.WriteLine("Handshake successful!");
             }
             bool exit = false;
+            Thread receiveFromServer = new Thread(this.receivePrintLoop);
+            receiveFromServer.Start();
             while (!exit)
             {
                 string messageFromClient = null;
@@ -41,6 +43,15 @@ namespace CS4390_ServerChat_Client
                 messageFromClient = Console.ReadLine();
                 send(messageFromClient);
                 if (messageFromClient.Equals("exit")) exit = true;
+            }
+            receiveFromServer.Abort();
+            ClientSocket.Close();
+        }
+
+        public void receivePrintLoop()
+        {
+            while(true)
+            {
                 Console.WriteLine(receive());
             }
         }
