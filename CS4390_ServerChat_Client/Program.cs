@@ -6,6 +6,11 @@ using System.Threading;
 
 namespace CS4390_ServerChat_Client
 {
+    public enum State {
+        None,
+        Chatting
+    }
+
     class Program
     {
         static void Main(string[] args) //If you run this with the argument '192.168.1.2', it'll use that as the server address to connect to.
@@ -38,59 +43,76 @@ namespace CS4390_ServerChat_Client
             if (!connected) {
 
             }
-            bool running = true;
 
-            while (running) {
-                while (true) {
-                    string input = Console.ReadLine();
+            string chatPartner = null;
+            State state = State.None;
+            bool running = true;
+            Queue<string> queue = new Queue<string>();
+
+            ChatInterface chatInterface = new ChatInterface(Console.WindowWidth, Console.WindowHeight);
+            Console.Clear();
+            chatInterface.PushMessage(string.Format("Connected to server as: {0}", clientID));
+
+            Thread listenThread = new Thread(() => {
+                while (running) {
+                    string message = tcpConnection.receive();
+                    lock (queue) {
+                        queue.Enqueue(message);
+                    }
+                }
+            });
+
+            listenThread.Start();
+            
+            while (true) {
+                Thread.Sleep(20);
+                lock (queue) {
+                    while (queue.Count > 0) {
+                        string serverMessage = queue.Dequeue();
+                        string[] tokens = serverMessage.Split(' ');
+
+                        if (tokens[0] == "UNREACHABLE") {
+                            Console.WriteLine("{0} is unreachable", tokens[1]);
+                        } else if (tokens[0] == "CHAT_STARTED") {
+                            chatPartner = tokens[1];
+                            state = State.Chatting;
+                            chatInterface.PushMessage(string.Format("Connected to {0}", tokens[1]));
+                        } else if (tokens[0] == "END_NOTIF") {
+                            state = State.None;
+                            chatInterface.PushMessage(string.Format("Chat ended with {0}", tokens[1]));
+                        } else {
+                            chatInterface.PushMessage(string.Format("[SERVER]: {0}", serverMessage));
+                        }
+                    }
+                }
+
+                string input = chatInterface.Update();
+                if (input == null) continue;
+
+                if (state == State.None) {
                     string[] tokens = input.Split(' ');
 
                     if (tokens[0] == "chat") {
                         tcpConnection.send(input);
-                        string requestResponse = tcpConnection.receive();
-
-                        string[] responseTokens = requestResponse.Split(' ');
-
-                        if (responseTokens[0] == "UNREACHABLE") {
-                            Console.WriteLine("{0} is unreachable", responseTokens[1]);
-                        } else if (responseTokens[0] == "CHAT_STARTED") {
-                            break;
-                        }
-                    } else if (tokens[0] == "exit") {
+                    } else if (tokens[0] == "logoff") {
                         running = false;
                         break;
                     } else {
-                        Console.WriteLine("Unrecognized command");
+                        chatInterface.PushMessage("Unrecognized command");
+                    }
+                } else if (state == State.Chatting) {
+                    if (input == "endchat") {
+                        state = State.None;
+                        tcpConnection.send("END_REQUEST");
+                    } else {
+                        tcpConnection.send(string.Format("CHAT {0}", input));
                     }
                 }
 
                 if (!running) break;
-
-                ChatInterface chatInterface = new ChatInterface(Console.WindowWidth, Console.WindowHeight);
-                Console.Clear();
-                bool exit = false;
-
-                Thread listenThread = new Thread(() => {
-                    while (!exit) {
-                        string message = tcpConnection.receive();
-                        chatInterface.PushMessage(string.Format("[SERVER]: {0}", message));
-                    }
-                });
-
-                listenThread.Start();
-
-                while (!exit) {
-                    Thread.Sleep(20);
-                    chatInterface.Update();
-                    string messageFromClient = null;
-                    messageFromClient = Console.ReadLine();
-                    tcpConnection.send(messageFromClient);
-                    chatInterface.PushMessage(string.Format("{0}: {1}", clientID, messageFromClient));
-                    if (messageFromClient.Equals("exit")) exit = true;
-                }
-
-                listenThread.Join();
             }
+
+            listenThread.Join();
         }
 
     }

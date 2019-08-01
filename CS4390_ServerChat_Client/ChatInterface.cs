@@ -21,13 +21,14 @@ public class ChatInterface {
         buffer.Push(message);
     }
 
-    public void Update() {
+    public string Update() {
+        string result = null;
         while (Console.KeyAvailable) {
             var c = Console.ReadKey(true);
             if (c.Key == ConsoleKey.Enter) {
-                string input = inputBuilder.ToString();
-                buffer.Push(input);
-                OnInput(input);
+                result = inputBuilder.ToString();
+                buffer.Push(result);
+                OnInput(result);
                 inputBuilder.Clear();
             } else if (c.Key == ConsoleKey.Backspace) {
                 if (inputBuilder.Length > 0) {
@@ -62,5 +63,6 @@ public class ChatInterface {
         Console.Write(screenBuilder.ToString());
         Console.SetCursorPosition(inputBuilder.Length, Console.WindowHeight - 1);
         Console.CursorVisible = true;
+        return result;
     }
 }
