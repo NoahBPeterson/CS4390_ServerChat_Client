@@ -29,11 +29,12 @@ namespace CS4390_ServerChat_Client
             ClientSocket.Connect(serverEndpoint);
             Console.Write("Client is connected\n");
             send(cookie.ToString()); //Need to send the rand_cookie to server for TCP so it knows who we are.
-            if(receive().Equals("CONNECTED"))
+            if(receiveString().Equals("CONNECTED"))
             {
                 Console.WriteLine("Handshake successful!");
                 return true;
             }
+
             return false;
         }
 
@@ -43,11 +44,20 @@ namespace CS4390_ServerChat_Client
 
         }
 
-        public string receive()
+        public string receiveString()
         {
             byte[] msgFromServer = new byte[1024];
             int size = ClientSocket.Receive(msgFromServer);
             return System.Text.Encoding.UTF8.GetString(msgFromServer, 0, size);
+        }
+
+        public byte[] receive()
+        {
+            byte[] msgFromServer = new byte[1024];
+            int size = ClientSocket.Receive(msgFromServer);
+            byte[] msg = new byte[size];
+            Array.Copy(msgFromServer, msg, size);
+            return msg;
         }
 
         public string Encrypt(string messageSent)

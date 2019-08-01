@@ -46,7 +46,8 @@ namespace CS4390_ServerChat_Client
 
             Thread listenThread = new Thread(() => {
                 while (!exit) {
-                    string message = tcpConnection.receive();
+                    byte[] cipherMessage = tcpConnection.receive();
+                    string message = Encryption.Decrypt(cipherMessage, udpConnection.privateKeyCipher);
                     chatInterface.PushMessage(string.Format("[SERVER]: {0}", message));
                 }
             });
@@ -54,7 +55,7 @@ namespace CS4390_ServerChat_Client
             listenThread.Start();
 
             while (!exit) {
-                Thread.Sleep(25);
+                Thread.Sleep(20);
                 chatInterface.Update();
                 string messageFromClient = null;
                 messageFromClient = Console.ReadLine();
