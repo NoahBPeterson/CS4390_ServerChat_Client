@@ -1,34 +1,43 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Text;
+using System.Threading;
 
 namespace CS4390_ServerChat_Client
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main(string[] args) //If you run this with the argument '192.168.1.2', it'll use that as the server address to connect to.
         {
             Console.WriteLine("Welcome to the Group 2 Chat Client!");
             Console.WriteLine("\n Enter your client ID.");
             string clientID = Console.ReadLine();
-            string serverIPPort = "";
-            if(args.Length==0) //If the console has not accepted any arguments, ask for the IP and port.
+            Console.WriteLine("\n Enter your client password.");
+            string password = Console.ReadLine();
+            string serverIP = "";
+
+            if (args.Length==0) //If the console has not accepted any arguments, ask for the IP.
             {
                 Console.WriteLine("\n Please enter the IP address of the server. (Example: 1.1.1.1)");
-                serverIPPort = Console.ReadLine();
+                serverIP = Console.ReadLine();
             }else
             {
-                serverIPPort = args[0];
+                serverIP = args[0];
             }
-            UDPConnection udpConnection = new UDPConnection(clientID, serverIPPort);
-
-
-            IPEndPoint response = null;
-            while (response==null)
+            UDPConnection udpConnection = new UDPConnection(clientID, password, serverIP);
+            string response = udpConnection.UDPConnect();
+            if (response.Equals("FAIL"))
             {
-                response = udpConnection.UDPConnect();
+                Console.ReadKey();
+                Main(args);
             }
-            Console.WriteLine("Finished?: "+response.ToString());
-                while(true)
+            int[] cookie_port = UDPConnection.udpParse(response);
+            TCPConnection tcpConnection = new TCPConnection(cookie_port[0], new IPEndPoint(IPAddress.Parse(serverIP), cookie_port[1]), udpConnection.privateKeyCipher);
+            tcpConnection.TCPConnect();
+            //tcpConnection.send/receive();
+
+            while (true)
             {
 
             }
