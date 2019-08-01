@@ -80,8 +80,13 @@ namespace CS4390_ServerChat_Client
                         } else if (tokens[0] == "END_NOTIF") {
                             state = State.None;
                             chatInterface.PushMessage(string.Format("Chat ended with {0}", tokens[1]));
+                        } else if (tokens[0] == "HISTORY") {
+                            string[] history = serverMessage.Substring(8).Split('\n');
+                            foreach (var line in history) {
+                                chatInterface.PushMessage(line);
+                            }
                         } else {
-                            chatInterface.PushMessage(string.Format("[SERVER]: {0}", serverMessage));
+                            chatInterface.PushMessage(serverMessage);
                         }
                     }
                 }
@@ -104,7 +109,6 @@ namespace CS4390_ServerChat_Client
                     }
                 } else if (state == State.Chatting) {
                     if (input == "endchat") {
-                        state = State.None;
                         tcpConnection.send("END_REQUEST");
                     } else {
                         tcpConnection.send(string.Format("CHAT {0}", input));
