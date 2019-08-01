@@ -23,7 +23,7 @@ namespace CS4390_ServerChat_Client
             serverEndpoint = server;
         }
 
-        public void TCPConnect()
+        public bool TCPConnect()
         {
             ClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             ClientSocket.Connect(serverEndpoint);
@@ -32,28 +32,9 @@ namespace CS4390_ServerChat_Client
             if(receive().Equals("CONNECTED"))
             {
                 Console.WriteLine("Handshake successful!");
+                return true;
             }
-            bool exit = false;
-            Thread receiveFromServer = new Thread(this.receivePrintLoop);
-            receiveFromServer.Start();
-            while (!exit)
-            {
-                string messageFromClient = null;
-                Console.WriteLine("Enter the Message");
-                messageFromClient = Console.ReadLine();
-                send(messageFromClient);
-                if (messageFromClient.Equals("exit")) exit = true;
-            }
-            receiveFromServer.Abort();
-            ClientSocket.Close();
-        }
-
-        public void receivePrintLoop()
-        {
-            while(true)
-            {
-                Console.WriteLine(receive());
-            }
+            return false;
         }
 
         public void send(string Message)
