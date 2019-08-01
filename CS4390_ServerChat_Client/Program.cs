@@ -38,33 +38,59 @@ namespace CS4390_ServerChat_Client
             if (!connected) {
 
             }
-            Thread.Sleep(25);
+            bool running = true;
 
-            ChatInterface chatInterface = new ChatInterface(Console.WindowWidth, Console.WindowHeight);
-            Console.Clear();
-            bool exit = false;
+            while (running) {
+                while (true) {
+                    string input = Console.ReadLine();
+                    string[] tokens = input.Split(' ');
 
-            Thread listenThread = new Thread(() => {
-                while (!exit) {
-                    byte[] cipherMessage = tcpConnection.receive();
-                    string message = Encryption.Decrypt(cipherMessage, udpConnection.privateKeyCipher);
-                    chatInterface.PushMessage(string.Format("[SERVER]: {0}", message));
+                    if (tokens[0] == "chat") {
+                        tcpConnection.send(input);
+                        string requestResponse = tcpConnection.receive();
+
+                        string[] responseTokens = requestResponse.Split(' ');
+
+                        if (responseTokens[0] == "UNREACHABLE") {
+                            Console.WriteLine("{0} is unreachable", responseTokens[1]);
+                        } else if (responseTokens[0] == "CHAT_STARTED") {
+                            break;
+                        }
+                    } else if (tokens[0] == "exit") {
+                        running = false;
+                        break;
+                    } else {
+                        Console.WriteLine("Unrecognized command");
+                    }
                 }
-            });
 
-            listenThread.Start();
+                if (!running) break;
 
-            while (!exit) {
-                Thread.Sleep(20);
-                chatInterface.Update();
-                string messageFromClient = null;
-                messageFromClient = Console.ReadLine();
-                tcpConnection.send(messageFromClient);
-                chatInterface.PushMessage(string.Format("{0}: {1}",clientID, messageFromClient));
-                if (messageFromClient.Equals("exit")) exit = true;
+                ChatInterface chatInterface = new ChatInterface(Console.WindowWidth, Console.WindowHeight);
+                Console.Clear();
+                bool exit = false;
+
+                Thread listenThread = new Thread(() => {
+                    while (!exit) {
+                        string message = tcpConnection.receive();
+                        chatInterface.PushMessage(string.Format("[SERVER]: {0}", message));
+                    }
+                });
+
+                listenThread.Start();
+
+                while (!exit) {
+                    Thread.Sleep(20);
+                    chatInterface.Update();
+                    string messageFromClient = null;
+                    messageFromClient = Console.ReadLine();
+                    tcpConnection.send(messageFromClient);
+                    chatInterface.PushMessage(string.Format("{0}: {1}", clientID, messageFromClient));
+                    if (messageFromClient.Equals("exit")) exit = true;
+                }
+
+                listenThread.Join();
             }
-
-            listenThread.Join();
         }
 
     }
