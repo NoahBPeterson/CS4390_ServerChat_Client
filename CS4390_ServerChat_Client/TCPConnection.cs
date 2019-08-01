@@ -28,8 +28,8 @@ namespace CS4390_ServerChat_Client
             ClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             ClientSocket.Connect(serverEndpoint);
             Console.Write("Client is connected\n");
-            send(cookie.ToString()); //Need to send the rand_cookie to server for TCP so it knows who we are.
-            if (Encryption.Decrypt(receive(), Cipher) == "CONNECTED")
+            sendPlain(cookie.ToString()); //Need to send the rand_cookie to server for TCP so it knows who we are.
+            if (receive() == "CONNECTED")
             {
                 Console.WriteLine("Handshake successful!");
                 return true;
@@ -40,24 +40,21 @@ namespace CS4390_ServerChat_Client
 
         public void send(string Message)
         {
-            ClientSocket.Send(System.Text.Encoding.UTF8.GetBytes(Message), 0, Message.Length, SocketFlags.None);
-
+            byte[] cipherMessage = Encryption.Encrypt(Message, Cipher);
+            ClientSocket.Send(cipherMessage, 0, cipherMessage.Length, SocketFlags.None);
         }
 
-        public string receiveString()
-        {
-            byte[] msgFromServer = new byte[1024];
-            int size = ClientSocket.Receive(msgFromServer);
-            return System.Text.Encoding.UTF8.GetString(msgFromServer, 0, size);
+        public void sendPlain(string message) {
+            ClientSocket.Send(Encoding.UTF8.GetBytes(message));
         }
 
-        public byte[] receive()
+        public string receive()
         {
             byte[] msgFromServer = new byte[1024];
             int size = ClientSocket.Receive(msgFromServer);
             byte[] msg = new byte[size];
             Array.Copy(msgFromServer, msg, size);
-            return msg;
+            return Encryption.Decrypt(msg, Cipher);
         }
 
         public string Encrypt(string messageSent)

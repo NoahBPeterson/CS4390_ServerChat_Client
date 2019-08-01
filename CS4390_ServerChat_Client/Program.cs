@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -46,8 +46,7 @@ namespace CS4390_ServerChat_Client
 
             Thread listenThread = new Thread(() => {
                 while (!exit) {
-                    byte[] cipherMessage = tcpConnection.receive();
-                    string message = Encryption.Decrypt(cipherMessage, udpConnection.privateKeyCipher);
+                    string message = tcpConnection.receive();
                     chatInterface.PushMessage(string.Format("[SERVER]: {0}", message));
                 }
             });
