@@ -34,7 +34,6 @@ namespace CS4390_ServerChat_Client
                 Console.WriteLine("Handshake successful!");
                 return true;
             }
-
             return false;
         }
 
