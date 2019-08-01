@@ -97,6 +97,8 @@ namespace CS4390_ServerChat_Client
                     } else if (tokens[0] == "logoff") {
                         running = false;
                         break;
+                    } else if (tokens[0] == "history") {
+                        tcpConnection.send(input);
                     } else {
                         chatInterface.PushMessage("Unrecognized command");
                     }
