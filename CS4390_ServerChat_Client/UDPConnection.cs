@@ -40,6 +40,8 @@ namespace CS4390_ServerChat_Client
             privateKeyCipher = clientResponse;
 
             string tcp = UDPReceive(); //Receive rand_cookie, port_number for TCP connection
+            Console.WriteLine("\"" + tcp + "\"");
+            tcp = Decrypt(tcp, (randomChallenge.ToString() + privateKey));
             if (tcp.Equals("FAIL"))
             {
                 Console.WriteLine("Authentication failed.");
@@ -115,5 +117,55 @@ namespace CS4390_ServerChat_Client
             return "";
 
         }
+        public string Encrypt(string messageSent, string password)
+        {
+            //this will use MD5 as well as Triple DES
+            using (var CryptoMD5 = new MD5CryptoServiceProvider())
+            {
+                using (var TripleDES = new TripleDESCryptoServiceProvider())
+                {
+                    //hashing and encryption begins here based on the password above
+                    TripleDES.Key = CryptoMD5.ComputeHash(UTF8Encoding.UTF8.GetBytes(password));
+                    TripleDES.Mode = CipherMode.ECB;
+                    TripleDES.Padding = PaddingMode.PKCS7;
+
+                    //creates an encryption from the library
+                    using (var crypt = TripleDES.CreateEncryptor())
+                    {
+                        //actual cryption goes here and accomodates for the length of the given string
+                        byte[] messageBytes = UTF8Encoding.UTF8.GetBytes(messageSent);
+                        byte[] totalBytes = crypt.TransformFinalBlock(messageBytes, 0, messageBytes.Length);
+                        return Convert.ToBase64String(totalBytes, 0, totalBytes.Length);
+                    }
+                }
+            }
+        }
+
+        public string Decrypt(string encryptedMessage, string password)
+        {
+            //once again this will be based on MD5 and Triple DES
+            using (var CryptoMD5 = new MD5CryptoServiceProvider())
+            {
+                //creating an instance for tripleDES
+                using (var TripleDES = new TripleDESCryptoServiceProvider())
+                {
+                    //here the password is read and cyphered
+                    TripleDES.Key = CryptoMD5.ComputeHash(UTF8Encoding.UTF8.GetBytes(password));
+                    TripleDES.Mode = CipherMode.ECB;
+                    TripleDES.Padding = PaddingMode.PKCS7;
+
+                    //here the decrytion occurs as we create an instance to begin decrypting
+                    using (var crypt = TripleDES.CreateDecryptor())
+                    {
+                        //here the magic happens as we decrypt what was sent and allow us to get the original message
+                        byte[] cipherBytes = Convert.FromBase64String(encryptedMessage);
+                        byte[] totalBytes = crypt.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
+                        return UTF8Encoding.UTF8.GetString(totalBytes);
+                    }
+                }
+            }
+        }
+
+
     }
 }
