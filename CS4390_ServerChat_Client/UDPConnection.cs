@@ -35,7 +35,7 @@ namespace CS4390_ServerChat_Client
             serverChallenge = Encoding.UTF8.GetBytes(response);
             int randomChallenge;
             Int32.TryParse(response, out randomChallenge);
-            string clientResponse = Encoding.UTF8.GetString(challengeReponse(randomChallenge)); //Get response, convert from byte[] to string
+            string clientResponse = Convert.ToBase64String(challengeReponse(randomChallenge)); //Get response, convert from byte[] to string
             UDPSend(clientID +" "+ clientResponse); //Send clientID + challenge Response
             privateKeyCipher = response + privateKey;
 
