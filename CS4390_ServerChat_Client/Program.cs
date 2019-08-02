@@ -85,7 +85,7 @@ namespace CS4390_ServerChat_Client
                             sessionID = int.Parse(tokens[1]);
                             chatPartner = tokens[2];
                             state = State.Chatting;
-                            chatInterface.PushMessage(string.Format("Connected to {0}", tokens[1]));
+                            chatInterface.PushMessage(string.Format("Connected to {0}", tokens[2]));
                         } else if (tokens[0] == "END_NOTIF") {
                             state = State.None;
                             chatInterface.PushMessage(string.Format("Chat ended with {0}", tokens[1]));
