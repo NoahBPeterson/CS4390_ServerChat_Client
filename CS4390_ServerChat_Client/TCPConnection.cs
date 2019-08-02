@@ -57,44 +57,8 @@ namespace CS4390_ServerChat_Client
             return Encryption.Decrypt(msg, Cipher);
         }
 
-        public string Encrypt(string messageSent)
-        {
-            using (var CryptoMD5 = new MD5CryptoServiceProvider())
-            {
-                using (var TripleDES = new TripleDESCryptoServiceProvider())
-                {
-                    TripleDES.Key = CryptoMD5.ComputeHash(UTF8Encoding.UTF8.GetBytes(Cipher));
-                    TripleDES.Mode = CipherMode.ECB;
-                    TripleDES.Padding = PaddingMode.PKCS7;
-
-                    using (var crypt = TripleDES.CreateEncryptor())
-                    {
-                        byte[] messageBytes = UTF8Encoding.UTF8.GetBytes(messageSent);
-                        byte[] totalBytes = crypt.TransformFinalBlock(messageBytes, 0, messageBytes.Length);
-                        return Convert.ToBase64String(totalBytes, 0, totalBytes.Length);
-                    }
-                }
-            }
-        }
-        
-        public string Decrypt(string encryptedMessage)
-        {
-            using (var CryptoMD5 = new MD5CryptoServiceProvider())
-            {
-                using (var TripleDES = new TripleDESCryptoServiceProvider())
-                {
-                    TripleDES.Key = CryptoMD5.ComputeHash(UTF8Encoding.UTF8.GetBytes(Cipher));
-                    TripleDES.Mode = CipherMode.ECB;
-                    TripleDES.Padding = PaddingMode.PKCS7;
-
-                    using (var crypt = TripleDES.CreateDecryptor())
-                    {
-                        byte[] cipherBytes = Convert.FromBase64String(encryptedMessage);
-                        byte[] totalBytes = crypt.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
-                        return UTF8Encoding.UTF8.GetString(totalBytes);
-                    }
-                }
-            }
+        public void Terminate() {
+            ClientSocket.Dispose();
         }
     }
 }

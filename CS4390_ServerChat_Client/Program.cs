@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
@@ -45,6 +46,7 @@ namespace CS4390_ServerChat_Client
             }
 
             string chatPartner = null;
+            int sessionID = 0;
             State state = State.None;
             bool running = true;
             Queue<string> queue = new Queue<string>();
@@ -54,11 +56,17 @@ namespace CS4390_ServerChat_Client
             chatInterface.PushMessage(string.Format("Connected to server as: {0}", clientID));
 
             Thread listenThread = new Thread(() => {
-                while (running) {
-                    string message = tcpConnection.receive();
-                    lock (queue) {
-                        queue.Enqueue(message);
+                try {
+                    while (running) {
+                        string message = tcpConnection.receive();
+                        lock (queue) {
+                            queue.Enqueue(message);
+                        }
                     }
+                }
+                catch (SocketException) {
+                    Console.Clear();
+                    Console.WriteLine("Logged off");
                 }
             });
 
@@ -74,19 +82,20 @@ namespace CS4390_ServerChat_Client
                         if (tokens[0] == "UNREACHABLE") {
                             Console.WriteLine("{0} is unreachable", tokens[1]);
                         } else if (tokens[0] == "CHAT_STARTED") {
-                            chatPartner = tokens[1];
+                            sessionID = int.Parse(tokens[1]);
+                            chatPartner = tokens[2];
                             state = State.Chatting;
-                            chatInterface.PushMessage(string.Format("Connected to {0}", tokens[1]));
+                            chatInterface.PushMessage(string.Format("Connected to {0}", tokens[2]));
                         } else if (tokens[0] == "END_NOTIF") {
                             state = State.None;
                             chatInterface.PushMessage(string.Format("Chat ended with {0}", tokens[1]));
                         } else if (tokens[0] == "HISTORY") {
-                            string[] history = serverMessage.Substring(8).Split('\n');
+                            string[] history = serverMessage.Substring(8).Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (var line in history) {
                                 chatInterface.PushMessage(line);
                             }
                         } else {
-                            chatInterface.PushMessage(serverMessage);
+                            chatInterface.PushMessage(stringSplit(serverMessage)[1]);
                         }
                     }
                 }
@@ -101,6 +110,7 @@ namespace CS4390_ServerChat_Client
                         tcpConnection.send(input);
                     } else if (tokens[0] == "logoff") {
                         running = false;
+                        tcpConnection.Terminate();
                         break;
                     } else if (tokens[0] == "history") {
                         tcpConnection.send(input);
@@ -121,5 +131,23 @@ namespace CS4390_ServerChat_Client
             listenThread.Join();
         }
 
+        static string[] stringSplit(string line) {
+            string cookie = "";
+            string port = "";
+            int space = 0;
+            for (int i = 0; i < line.Length; i++) {
+                if (line[i] == ' ') {
+                    space = i;
+                    break;
+                } else {
+                    cookie += line.Substring(i, 1);
+                }
+            }
+            port = line.Substring(space, line.Length - space);
+            cookie = cookie.Trim();
+            port = port.Trim();
+            string[] cookiePort = { cookie, port };
+            return cookiePort;
+        }
     }
 }
