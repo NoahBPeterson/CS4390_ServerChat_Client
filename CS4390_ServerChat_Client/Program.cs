@@ -88,7 +88,8 @@ namespace CS4390_ServerChat_Client
                             chatInterface.PushMessage(string.Format("Connected to {0}", tokens[2]));
                         } else if (tokens[0] == "END_NOTIF") {
                             state = State.None;
-                            chatInterface.PushMessage(string.Format("Chat ended with {0}", tokens[1]));
+                            chatInterface.PushMessage(string.Format("Chat ended with {0}", chatPartner));
+                            chatPartner = null;
                         } else if (tokens[0] == "HISTORY") {
                             string[] history = serverMessage.Substring(8).Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (var line in history) {
