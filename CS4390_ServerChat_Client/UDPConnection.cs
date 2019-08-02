@@ -41,11 +41,13 @@ namespace CS4390_ServerChat_Client
 
             string tcp = UDPReceive(); //Receive rand_cookie, port_number for TCP connection
             Console.WriteLine("\"" + tcp + "\"");
-            tcp = Decrypt(tcp, (randomChallenge.ToString() + privateKey));
             if (tcp.Equals("FAIL"))
             {
                 Console.WriteLine("Authentication failed.");
+                return "";
             }
+            tcp = Decrypt(tcp, (randomChallenge.ToString() + privateKey));
+
             udpConnectionSocket.Close();  //Close socket when done.
             return tcp;
         }
